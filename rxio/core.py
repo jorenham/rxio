@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-__all__ = (
-    'RxVar',
-)
+__all__ = ("RxVar",)
 
 import asyncio
 import collections
@@ -17,15 +15,15 @@ if sys.version_info >= (3, 10):
 else:
     from typing_extensions import TypeAlias
 
-_T = TypeVar('_T')
-_D = TypeVar('_D')
+_T = TypeVar("_T")
+_D = TypeVar("_D")
 
 
 _RxState: TypeAlias = collections.deque[tuple[int, asyncio.Future[_T]]]
 
 
 class RxVar(Generic[_T]):
-    __slots__ = '_name', '_state', '__weakref__'
+    __slots__ = "_name", "_state", "__weakref__"
 
     _name: Final[str]
     _state: _RxState[_T]
@@ -49,7 +47,7 @@ class RxVar(Generic[_T]):
         if value is notset:
             return name
 
-        return f'{name} = {value!r}'
+        return f"{name} = {value!r}"
 
     __str__ = __repr__
     __hash__ = None  # type: ignore[assignment]
@@ -75,17 +73,19 @@ class RxVar(Generic[_T]):
     @property
     def tickname(self) -> str:
         """The name and the tick of this variable, e.g. ``'spam@42'``."""
-        return f'{self._name}@{self.tick}'
+        return f"{self._name}@{self.tick}"
 
     async def get(self) -> _T:
-        """Wait until a value is assigned and return it.
-        """
+        """Wait until a value is assigned and return it."""
         return await self._state[0][1]
 
     @overload
-    def get_nowait(self) -> _T: ...
+    def get_nowait(self) -> _T:
+        ...
+
     @overload
-    def get_nowait(self, __default: _T | _D, /) -> _T | _D: ...
+    def get_nowait(self, __default: _T | _D, /) -> _T | _D:
+        ...
 
     def get_nowait(self, *args: _T | _D) -> _T | _D:
         """Return the current value if set, otherwise, return the default, or
@@ -93,7 +93,7 @@ class RxVar(Generic[_T]):
         """
         if len(args) > 1:
             raise TypeError(
-                f'get_nowait() expected at most 1 argument, got {len(args)}'
+                f"get_nowait() expected at most 1 argument, got {len(args)}"
             )
 
         if (future := self._state[0][1]).done():
@@ -103,14 +103,10 @@ class RxVar(Generic[_T]):
         raise LookupError(self.tickname)
 
     async def wait(self) -> _T:
-        """Wait until a new value is assigned and return it.
-        """
+        """Wait until a new value is assigned and return it."""
         return await self._state[-1][1]
 
-    async def watch(
-        self,
-        immediate: bool = False
-    ) -> AsyncGenerator[_T, None]:
+    async def watch(self, immediate: bool = False) -> AsyncGenerator[_T, None]:
         """Return an async iterator that produces values once they are set.
 
         Args:
@@ -134,9 +130,9 @@ class RxVar(Generic[_T]):
 
                 if dt > 2:
                     if dt == 3:
-                        value_fmt = 'value'
+                        value_fmt = "value"
                     else:
-                        value_fmt = f'{dt-2} values'
+                        value_fmt = f"{dt-2} values"
                     warnings.warn(
                         f"can't keep up: {value_fmt} missed in {self}.watch()"
                     )

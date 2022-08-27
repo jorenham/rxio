@@ -1,11 +1,12 @@
 [tool.poetry]
 name = "rxio"
-version = "0.1.2"
+version = "0.1.3"
 description = "Flexible, predictable, async reactive programming in modern Python"
 authors = ["Joren Hammudoglu <jhammudoglu@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/jorenham/rxio"
+
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -17,10 +18,13 @@ pytest = "^7.1"
 pytest-asyncio = "^0.19.0"
 
 pyright = "^1.1.268"
+black = "^22.6.0"
+
 
 [tool.pytest.ini_options]
 addopts = "--maxfail=1"
 asyncio_mode = "auto"
+
 
 [tool.pyright]
 pythonVersion = "3.9"
@@ -40,12 +44,18 @@ stubPath = ""
 
 typeCheckingMode = 'strict'
 reportCallInDefaultInitializer = 'warning'
-#reportImplicitStringConcatenation = 'warning'
+# reportImplicitStringConcatenation = 'warning'
 reportMissingSuperCall = 'warning'
 reportPropertyTypeMismatch = 'warning'
 reportUninitializedInstanceVariable = 'warning'
 reportUnnecessaryTypeIgnoreComment = 'warning'
 reportUnusedCallResult = 'warning'
+
+
+[tool.black]
+line-length = 80
+target-version = ['py39', 'py310']
+src = 'rxio'
 
 
 [build-system]

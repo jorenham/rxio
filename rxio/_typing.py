@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 __all__ = (
-    'Async',
-    'AsyncCallable',
-    'AwaitResult',
-    'Coro',
-    'CoroCallable',
+    "Async",
+    "AsyncCallable",
+    "AwaitResult",
+    "Coro",
+    "CoroCallable",
 )
 
 from asyncio import Future
@@ -27,9 +27,9 @@ if sys.version_info >= (3, 10):
 else:
     from typing_extensions import TypeAlias
 
-_T = TypeVar('_T')
-_V = TypeVar('_V')
-_Ps = ParamSpec('_Ps')
+_T = TypeVar("_T")
+_V = TypeVar("_V")
+_Ps = ParamSpec("_Ps")
 
 AwaitResult: TypeAlias = Generator[Any, None, _T]
 

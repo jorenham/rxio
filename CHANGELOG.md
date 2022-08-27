@@ -1,6 +1,10 @@
+# Release 0.1.3 (August 27, 2022)
+
+- enforce [`black`](https://github.com/psf/black) code style
+
 # Release 0.1.2 (August 27, 2022)
 
-- `pyright` strict type checking
+- [`pyright`](https://github.com/microsoft/pyright) strict type checking
 - removed dead code and unused dependencies
 - added `CHANGELOG.md`
 
