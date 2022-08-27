@@ -5,37 +5,41 @@ __all__ = (
 )
 
 import asyncio
-from asyncio import Future, get_running_loop
-from collections import deque
-import enum
-from typing import AsyncGenerator, Generic, Literal, TypeVar, overload
+import collections
+import sys
+from typing import AsyncGenerator, Final, Generic, TypeVar, overload
 import warnings
 
-from rxio.utils import pause
+from .utils import pause
+
+if sys.version_info >= (3, 10):
+    from typing import TypeAlias
+else:
+    from typing_extensions import TypeAlias
 
 _T = TypeVar('_T')
 _D = TypeVar('_D')
 
 
-class _Markers(enum.Enum):
-    void = object()
+_RxState: TypeAlias = collections.deque[tuple[int, asyncio.Future[_T]]]
 
 
 class RxVar(Generic[_T]):
-    __slots__ = '_name', '_state', '_lock', '__weakref__'
+    __slots__ = '_name', '_state', '__weakref__'
 
-    _state: deque[tuple[int, Future[_T]]]
+    _name: Final[str]
+    _state: _RxState[_T]
 
-    def __init__(self, name: str, *, _state=None):
+    def __init__(self, name: str, *, _state: _RxState[_T] | None = None):
+        super().__init__()
+
         self._name = name
 
         if _state is None:
-            future = get_running_loop().create_future()
-            self._state = deque([(0, future)], maxlen=2)
+            future = asyncio.get_running_loop().create_future()
+            self._state = collections.deque([(0, future)], maxlen=2)
         else:
             self._state = _state
-
-        self._lock = asyncio.Lock()
 
     def __repr__(self) -> str:
         name = self.tickname
@@ -48,9 +52,7 @@ class RxVar(Generic[_T]):
         return f'{name} = {value!r}'
 
     __str__ = __repr__
-
-    def __hash__(self):
-        raise TypeError(f'unhashable type: {type(self).__name__!r}')
+    __hash__ = None  # type: ignore[assignment]
 
     @property
     def is_set(self) -> bool:
@@ -85,7 +87,7 @@ class RxVar(Generic[_T]):
     @overload
     def get_nowait(self, __default: _T | _D, /) -> _T | _D: ...
 
-    def get_nowait(self, *args):
+    def get_nowait(self, *args: _T | _D) -> _T | _D:
         """Return the current value if set, otherwise, return the default, or
         raise LookupError.
         """
@@ -131,9 +133,12 @@ class RxVar(Generic[_T]):
                 assert tj + 1 == ti
 
                 if dt > 2:
+                    if dt == 3:
+                        value_fmt = 'value'
+                    else:
+                        value_fmt = f'{dt-2} values'
                     warnings.warn(
-                        f'can\'t keep up: 1 {dt} values ignored while watching '
-                        f'{self}'
+                        f"can't keep up: {value_fmt} missed in {self}.watch()"
                     )
 
                 yield await present
@@ -170,7 +175,7 @@ class RxVar(Generic[_T]):
             the event loop (e.g. with ``asyncio.sleep(0)``) overwrites earlier
             values, "hiding" them from the current waiting and watching tasks.
         """
-        present: Future[_T]
+        present: asyncio.Future[_T]
 
         present = self._state[0][1]
         if present.done():
@@ -181,10 +186,10 @@ class RxVar(Generic[_T]):
 
         t, present = self._state[-1]
         if present.done():
-            present.result()  # raises if cancelled
+            _ = present.result()  # raises if cancelled
             raise RuntimeError(
-                'The future is already set...? If you\'re assigning from '
-                'different threads: don\'t. Otherwise, this is probably a bug.'
+                "The future is already set...? If you're assigning from "
+                "different threads: don't. Otherwise, this is probably a bug."
             )
 
         # prepare the next future

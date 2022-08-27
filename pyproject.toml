@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rxio"
-version = "0.1.1"
+version = "0.1.2"
 description = "Flexible, predictable, async reactive programming in modern Python"
 authors = ["Joren Hammudoglu <jhammudoglu@gmail.com>"]
 license = "MIT"
@@ -9,15 +9,14 @@ repository = "https://github.com/jorenham/rxio"
 
 [tool.poetry.dependencies]
 python = "^3.9"
+typing-extensions = { version = "^4.3", python = "<3.10" }
+
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1"
 pytest-asyncio = "^0.19.0"
-pyright = "^1.1.268"
 
-[tool.poetry.dependencies.uvloop]
-version = "^0.16"
-markers = "sys_platform != 'win32' and implementation_name == 'cpython'"
+pyright = "^1.1.268"
 
 [tool.pytest.ini_options]
 addopts = "--maxfail=1"
@@ -25,16 +24,28 @@ asyncio_mode = "auto"
 
 [tool.pyright]
 pythonVersion = "3.9"
-strictParameterNoneValue = false
+pythonPlatform = "All"
+
 include = ["rxio"]
 exclude = [
     "**/__pycache__",
-    ".pytest_cache",
-    ".hypothesis",
+    "**/.pytest_cache",
+    "**/.hypothesis",
+    ".git",
     "tests",
     "dist",
 ]
 venvPath = ".venv"
+stubPath = ""
+
+typeCheckingMode = 'strict'
+reportCallInDefaultInitializer = 'warning'
+#reportImplicitStringConcatenation = 'warning'
+reportMissingSuperCall = 'warning'
+reportPropertyTypeMismatch = 'warning'
+reportUninitializedInstanceVariable = 'warning'
+reportUnnecessaryTypeIgnoreComment = 'warning'
+reportUnusedCallResult = 'warning'
 
 
 [build-system]
