@@ -26,6 +26,7 @@ else:
     from typing_extensions import TypeAlias
 
 _T = TypeVar("_T")
+_T_co = TypeVar("_T_co", covariant=True)
 _D = TypeVar("_D")
 
 
@@ -47,15 +48,15 @@ _RxState: TypeAlias = collections.deque[
 ]
 
 
-class RxBase(Generic[_T]):
+class RxBase(Generic[_T_co]):
     __slots__ = ("_name", "_state", "__weakref__")
 
     empty: ClassVar[_EmptyT] = _Marker.empty
 
     _name: Final[str]
-    _state: _RxState[_T]
+    _state: _RxState[_T_co]
 
-    def __init__(self, name: str, *, _state: _RxState[_T] | None = None):
+    def __init__(self, name: str, *, _state: _RxState[_T_co] | None = None):
         super().__init__()
 
         self._name = name
@@ -92,7 +93,7 @@ class RxBase(Generic[_T]):
         return self._state[0][0]
 
     @property
-    def value(self) -> _T | _EmptyT:
+    def value(self) -> _T_co | _EmptyT:
         return self._state[0][1]
 
     @property
@@ -101,7 +102,7 @@ class RxBase(Generic[_T]):
         return self.value is RxBase.empty
 
     @property
-    def _future(self) -> asyncio.Future[_T | _EmptyT]:
+    def _future(self) -> asyncio.Future[_T_co | _EmptyT]:
         future = self._state[0][2]
         if future.done():
             # potentially raises asyncio.CancelledError
@@ -125,7 +126,7 @@ class RxBase(Generic[_T]):
         await pause()
         return self.tick
 
-    async def get_value(self) -> _T:
+    async def get_value(self) -> _T_co:
         """Get the current value, or wait until there is one.
 
         Returns:
@@ -148,18 +149,18 @@ class RxBase(Generic[_T]):
         return self.tick
 
     @overload
-    async def next_value(self) -> _T:
+    async def next_value(self) -> _T_co:
         ...
 
     @overload
-    async def next_value(self, skip_empty: Literal[True]) -> _T:
+    async def next_value(self, skip_empty: Literal[True]) -> _T_co:
         ...
 
     @overload
-    async def next_value(self, skip_empty: Literal[False]) -> _T | _EmptyT:
+    async def next_value(self, skip_empty: Literal[False]) -> _T_co | _EmptyT:
         ...
 
-    async def next_value(self, skip_empty: bool = True) -> _T | _EmptyT:
+    async def next_value(self, skip_empty: bool = True) -> _T_co | _EmptyT:
         """Wait until a value is assigned and return it.
 
         Args:
@@ -216,7 +217,7 @@ class RxBase(Generic[_T]):
     @overload
     async def iter_values(
         self, current: bool = ...
-    ) -> AsyncGenerator[_T, None]:
+    ) -> AsyncGenerator[_T_co, None]:
         ...
 
     @overload
@@ -224,7 +225,7 @@ class RxBase(Generic[_T]):
         self,
         current: bool = ...,
         skip_empty: Literal[True] = ...,
-    ) -> AsyncGenerator[_T, None]:
+    ) -> AsyncGenerator[_T_co, None]:
         ...
 
     @overload
@@ -232,14 +233,14 @@ class RxBase(Generic[_T]):
         self,
         current: bool = ...,
         skip_empty: Literal[False] = ...,
-    ) -> AsyncGenerator[_T | _EmptyT, None]:
+    ) -> AsyncGenerator[_T_co | _EmptyT, None]:
         ...
 
     async def iter_values(
         self,
         current: bool = True,
         skip_empty: bool = True,
-    ) -> AsyncGenerator[_T | _EmptyT, None]:
+    ) -> AsyncGenerator[_T_co | _EmptyT, None]:
         """Iterates over the values once they change.
 
         Args:

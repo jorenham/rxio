@@ -1,3 +1,7 @@
+# Release 0.1.5 (August 28, 2022)
+
+- `RxBase[+T]` is now covariant for `T`
+
 # Release 0.1.4 (August 28, 2022)
 
 - extracted base class `RxBase`
