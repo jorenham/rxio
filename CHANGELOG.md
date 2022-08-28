@@ -1,3 +1,9 @@
+# Release 0.1.4 (August 28, 2022)
+
+- extracted base class `RxBase`
+- simplified `RxBase._state` into a one element deque 
+- fully reworked the api 
+
 # Release 0.1.3 (August 27, 2022)
 
 - enforce [`black`](https://github.com/psf/black) code style

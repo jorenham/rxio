@@ -1,7 +1,5 @@
 import asyncio
 
-import pytest
-
 from rxio.core import RxVar
 
 
@@ -9,78 +7,141 @@ async def test_initial():
     v = RxVar('v')
     assert v.name == 'v'
     assert v.tick == 0
-    assert v.tickname == 'v@0'
+    assert v.is_empty
+    assert v.value is RxVar.empty
+    assert not v._future.done()
 
-    assert not v.is_set
-    default = object()
-    assert v.get_nowait(default) is default
-
-    with pytest.raises(LookupError):
-        v.get_nowait()
+    assert await v.get_tick() == 0
 
 
-async def test_set_nowait_once():
+async def test_set_sync():
     v = RxVar('v')
-    v.set_nowait(42)
 
-    assert v.is_set
+    task_get = asyncio.create_task(v.get_value())
+    task_next = asyncio.create_task(v.next_value())
+    task_it_next = asyncio.create_task(v.__aiter__().__anext__())
+
+    await asyncio.sleep(0)
+
+    v.value = 42
+
+    assert not v.is_empty
+    assert v.value == 42
     assert v.tick == 1
-    assert v.tickname == 'v@1'
 
-    assert v.get_nowait() == 42
-    assert await v.get() == 42
+    assert await task_get == 42
+    assert await task_next == 42
+    assert await task_it_next == 42
+
+    assert await v == 42
+    assert await v.get_value() == 42
 
 
-async def test_set_once():
+async def test_set_sync_overwrite():
     v = RxVar('v')
-    await v.set(42)
 
-    assert v.is_set
+    it = v.__aiter__()
+    tasks_early = list(map(
+        asyncio.create_task,
+        [v.get_value(), v.next_value(), it.__anext__()]
+    ))
+    await asyncio.sleep(0)  # start the early tasks
+
+    tasks_late = list(map(
+        asyncio.create_task,
+        [v.get_value(), v.next_value(), it.__anext__()]
+    ))
+    # late tasks aren't started now
+
+    v.value = 666
+    v.value = 42
+
+    assert not v.is_empty
+    assert v.value == 42
+    assert v.tick == 2
+
+    vals_early = await asyncio.gather(*tasks_early)
+    assert vals_early == [666] * 3
+
+    assert await v == 42
+    assert await v.get_value() == 42
+    assert await v.__aiter__().__anext__() == 42
+
+    assert await tasks_late[0] == 42
+    # ensure the tasks could be done
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+
+    # but they shouldn't; as the event loopt does not get control in between
+    # the setter calls; only one of the two set values is registered
+    assert not tasks_late[1].done()
+    assert not tasks_late[2].done()
+
+    # die pls
+    tasks_late[1].cancel()
+    tasks_late[2].cancel()
+
+
+async def test_set_async():
+    v = RxVar('v')
+
+    task_get = asyncio.create_task(v.get_value())
+    task_next = asyncio.create_task(v.next_value())
+    task_it_next = asyncio.create_task(v.__aiter__().__anext__())
+
+    await asyncio.sleep(0)
+
+    await v.set_value(42)
+
+    assert not v.is_empty
+    assert v.value == 42
     assert v.tick == 1
-    assert v.tickname == 'v@1'
 
-    assert v.get_nowait() == 42
-    assert await v.get() == 42
+    assert await task_get == 42
+    assert await task_next == 42
+    assert await task_it_next == 42
+
+    assert await v == 42
+    assert await v.get_value() == 42
 
 
-async def test_set_nowait_twice():
+# noinspection PyUnresolvedReferences
+async def test_set_async_overwrite():
     v = RxVar('v')
 
-    t0 = asyncio.create_task(v.get())
-    v.set_nowait(42)
-    t1 = asyncio.create_task(v.get())
-    v.set_nowait(69)
+    it0 = v.__aiter__()
+    it0_next = v.iter_values(False)
+    tasks0 = list(map(
+        asyncio.create_task,
+        [v.get_value(), it0.__anext__(), v.next_value(),  it0_next.__anext__()]
+    ))
+    await asyncio.sleep(0)  # start the early tasks
 
-    assert v.is_set
+    it1 = v.__aiter__()
+    it1_next = v.iter_values(False)
+    tasks1 = list(map(
+        asyncio.create_task,
+        [v.get_value(), it1.__anext__(), v.next_value(),  it1_next.__anext__()]
+    ))
+    # late tasks aren't started now
+
+    await v.set_value(666)
+    await v.set_value(42)
+
+    assert not v.is_empty
+    assert v.value == 42
     assert v.tick == 2
-    assert v.tickname == 'v@2'
 
-    assert v.get_nowait() == 69
-    assert await v.get() == 69
+    vals_early = await asyncio.gather(*tasks0)
+    assert vals_early == [666] * 4
 
-    # expected behauviour; overwriting within the same tick is ok
-    assert await t0 == 69
-    assert await t1 == 69
+    vals_late = await asyncio.gather(*tasks1)
+    assert vals_late == [666, 666, 42, 42]  # [current, current, next, next]
 
+    assert await v == 42
+    assert await v.get_value() == 42
 
-async def test_set_twice():
-    v = RxVar('v')
-
-    tg0 = asyncio.create_task(v.get())
-    tw0 = asyncio.create_task(v.wait())
-    await v.set(42)
-    tg1 = asyncio.create_task(v.get())
-    tw1 = asyncio.create_task(v.wait())
-    await v.set(69)
-
-    assert v.is_set
-    assert v.tick == 2
-    assert v.tickname == 'v@2'
-
-    assert v.get_nowait() == 69
-    assert await v.get() == 69
-
-    assert await tg0 == 42
-    assert await tw0 == 42
-    assert await tg1 == 42  # .get() before the second set()
-    assert await tw1 == 69  # .wait() before the second set()
+    assert await v.__aiter__().__anext__() == 42
+    assert await it0.__anext__() == 42
+    assert await it1.__anext__() == 42
