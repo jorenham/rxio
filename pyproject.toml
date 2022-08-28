@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rxio"
-version = "0.1.4"
+version = "0.1.5"
 description = "Flexible, predictable, async reactive programming in modern Python"
 authors = ["Joren Hammudoglu <jhammudoglu@gmail.com>"]
 license = "MIT"
