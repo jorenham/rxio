@@ -2,29 +2,45 @@
 
 -----
 
-[![PyPI version shields.io](https://img.shields.io/pypi/v/rxio.svg)](https://pypi.python.org/pypi/rxio/)
-[![PyPI pyversions](https://img.shields.io/pypi/pyversions/rxio.svg)](https://pypi.python.org/pypi/rxio/)
-[![PyPI license](https://img.shields.io/pypi/l/rxio.svg)](https://pypi.python.org/pypi/rxio/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![license](https://img.shields.io/github/license/jorenham/rxio?style=flat-square)](https://github.com/jorenham/rxio/blob/master/LICENSE?)
 
 -----
 
-Currently in the early development phase; do not use in production.
+**RxIO is an expertimental project, and has no stable interface.**
 
+The earlier 0.1.* versions won't be continued.
 
-## Roadmap:
+At the moment only Python 3.12 is supported. This makes prototyping easier.
+Once the prototype is ready, support will be added for earlier Python versions.
 
-- [x] `RxVar[T]`: variable
-- [ ] `RxResult[*Ps, T]`: function result, bound to reactive args
-- [ ] `Rx{Function,Method}`: returns `RxResult`, can watch when called
-- [ ] (mk)docs 
-- [ ] github actions
-- [ ] `RxAttr[T]`: descriptor attribute / field
-- [ ] `RxType`: custom rx type base: reactive attrs, methods, properties and lifecycle
-- [ ] `Rx{Bool,Int,Float,Str,...}`: reactie builtin types
-- [ ] `Rx{Tuple,List,Set,Dict,...}`: reactive builtin collections
-- [ ] `reactive(...)`: central `Rx*` construction for (builtin) types, functions, etc.
-- [ ] `Rx{File,Signal,Process,Socket,...}`: reactive IO (state) 
-- [ ] [dataclasses](https://docs.python.org/3/library/dataclasses.html) integration
-- [ ] (optional) [python-attrs](https://github.com/python-attrs/attrs) integration
-- [ ] (optional) [pydantic](https://github.com/pydantic/pydantic) integration
+## Use cases:
+
+RxIO aims to
+
+- state management
+- bridging sync and async code
+- front-end web apps, using e.g. pyodide or pyscript
+- mobile apps, with e.g. [kivy](https://kivy.org/)
+- GUI's based e.g. with TkInter, PyQT, or wxPython
+- interactive data visualization, e.g. with bokeh, plotly, panels, or dash
+- realtime webservers, e.g. with HTTP/3 or WebRTC
+- trading bots
+- robotics
+- home automation
+
+## Design Goals
+
+- clean and intuïtive interface: concise, simple, yet powerful
+- fast, even in complex applications
+- documentation for humans
+- solid error handling: no hidden exceptions, concise traces, helpful messages
+- provides both sync and async interfaces
+- maximally deterministic: failures can be reproduced
+- debuggable: plays nicely with debuggers, configurable logging
+- not a framework: can be integrated without rewriting your codebase
+- pluggable backends, e.g. threading, asyncio, joblib, or redis
+- wasm-compatible
+- fully type-annotated, and understood by editors
+- [hypothesis](https://hypothesis.readthedocs.io/en/latest/)-tested
+- strict code style, enforced by [ruff](https://docs.astral.sh/ruff/)
+- no required runtime dependencies, only optional ones
