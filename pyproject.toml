@@ -17,7 +17,7 @@ python = "^3.12"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
-hypothesis = "^6.97.1"
+hypothesis = "^6.97.4"
 pyright = "^1.1.348"
 ruff = "^0.1.14"
 codespell = "^2.2.6"
