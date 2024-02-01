@@ -3,6 +3,7 @@
 -----
 
 [![license](https://img.shields.io/github/license/jorenham/rxio?style=flat-square)](https://github.com/jorenham/rxio/blob/dev/LICENSE?)
+[![CI](https://github.com/jorenham/rxio/actions/workflows/CI.yml/badge.svg)](https://github.com/jorenham/rxio/actions/workflows/CI.yml)
 
 -----
 
@@ -11,8 +12,9 @@
 RxIO v0.2 won't build upon v0.1, and will switch to a BSD-3 license.
 
 The initial v0.2 prototype will require Python 3.12 or higher.
-Especially the availabilty of PEP 965 will accelerate the prototyping process.
-Once I'm satisfied with the prototype, I plan to add support for earlier Python versions.
+Especially the availability of PEP 965 will accelerate the prototyping process.
+Once I'm satisfied with the prototype, I plan to add support for earlier
+Python versions.
 
 ## Optimistic Design Goals
 
