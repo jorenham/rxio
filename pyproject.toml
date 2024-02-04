@@ -17,9 +17,9 @@ python = "^3.12"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
-hypothesis = "^6.97.1"
-pyright = "^1.1.348"
-ruff = "^0.1.14"
+hypothesis = "^6.97.6"
+pyright = "^1.1.349"
+ruff = "^0.2.0"
 codespell = "^2.2.6"
 
 
@@ -57,25 +57,65 @@ exclude = [
     ".vscode",
     ".git",
     ".github",
-    "docs",
-    "dist",
-    "site",
-    "tests",
+    "tests"
 ]
+strictListInference = true
+strictDictionaryInference = true
+strictSetInference = true
+disableBytesTypePromotions = true
+reportPropertyTypeMismatch = "error"
+reportMissingTypeStubs = "warning"
+reportImportCycles = "warning"
+reportUnusedImport = "warning"
+reportUnusedClass = "warning"
+reportUnusedFunction = "warning"
+reportUnusedVariable = "warning"
+reportDuplicateImport = "warning"
+reportUntypedNamedTuple = "error"
+reportPrivateUsage = "error"
+reportTypeCommentUsage = "error"
+reportConstantRedefinition = "error"
+reportDeprecated = "information"
+reportInconsistentConstructor = "error"
+reportMissingSuperCall = "error"
+reportUninitializedInstanceVariable = "error"
+reportUnknownParameterType = "warning"
+reportUnknownArgumentType = "warning"
+reportUnknownLambdaType = "warning"
+reportUnknownVariableType = "warning"
+reportUnknownMemberType = "warning"
+reportInvalidTypeVarUse = "error"
+reportCallInDefaultInitializer = "warning"
+reportUnnecessaryIsInstance = "warning"
+reportUnnecessaryCast = "warning"
+reportUnnecessaryComparison = "warning"
+reportUnnecessaryContains = "warning"
+reportImplicitStringConcatenation = "warning"
+reportInvalidStubStatement = "error"
+reportIncompleteStub = "error"
+reportUnusedCallResult = "warning"
+reportUnusedExpression = "warning"
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportMatchNotExhaustive = "error"
+reportImplicitOverride = "error"
+reportShadowedImports = "error"
 
 
 [tool.ruff]
 src = ["rxio"]
 target-version = "py312"
 line-length = 79
-ignore-init-module-imports = true
+indent-width = 4
+force-exclude = true
 extend-exclude = [
     ".github",
     ".vscode",
     "py.typed",
+    "experments",
 ]
 
 [tool.ruff.lint]
+ignore-init-module-imports = true
 preview = true
 select = [
     "F",        # pyflakes
@@ -126,15 +166,33 @@ select = [
     "PERF",     # perflint,
     "FURB",     # refurb
     "LOG",      # flake8-logging
-    "RUF",      # Ruff-specific rules
+    "RUF",      # ruff
 ]
-ignore = [
+extend-ignore = [
+    # flake8-annotations
+    "ANN001",   # missing-type-function-argument (deprecated)
+    "ANN002",   # missing-type-args (deprecated)
+    # pydocstyle
+    "D100",     # undocumented-public-module
+    "D104",     # undocumented-public-package
     "D205",     # blank-line-after-summary
     "D212",     # multi-line-summary-first-line
+]
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "D",        # pydocstyle
+    "ANN",      # flake8-annotations
+    "S101",     # flake8-bandit: assert
 ]
 
 [tool.ruff.lint.pycodestyle]
 max-line-length = 79
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+combine-as-imports = true
+force-wrap-aliases = true
+known-first-party = ["rxio"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -143,18 +201,17 @@ ignore-decorators = ["typing.overload"]
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "single"
 
-[tool.ruff.lint.isort]
-case-sensitive = true
-combine-as-imports = true
-force-wrap-aliases = true
-known-first-party = ["rxio"]
+[tool.ruff.lint.pylint]
+allow-magic-value-types = ["int"]
 
 [tool.ruff.format]
 docstring-code-format = true
 quote-style = "single"
+indent-style = "space"
+line-ending = "lf"
 skip-magic-trailing-comma = true
 
 
 [tool.codespell]
-skip = './dist,./site,*.lock,*.pyc,*.js,*.css,*.svg,*.png,*.ico,*.ipynb'
+skip = './dist,./site,*.lock,*.pyc,'
 context = 2
