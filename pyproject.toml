@@ -77,7 +77,6 @@ reportTypeCommentUsage = "error"
 reportConstantRedefinition = "error"
 reportDeprecated = "information"
 reportInconsistentConstructor = "error"
-reportMissingSuperCall = "error"
 reportUninitializedInstanceVariable = "error"
 reportUnknownParameterType = "warning"
 reportUnknownArgumentType = "warning"
@@ -124,7 +123,6 @@ select = [
     "C90",      # mccabe
     "I",        # isort
     "N",        # pep8-naming
-    "D",        # pydocstyle
     "UP",       # pyupgrade
     "YTT",      # flake8-2020
     "ANN",      # flake8-annotations
@@ -172,11 +170,6 @@ extend-ignore = [
     # flake8-annotations
     "ANN001",   # missing-type-function-argument (deprecated)
     "ANN002",   # missing-type-args (deprecated)
-    # pydocstyle
-    "D100",     # undocumented-public-module
-    "D104",     # undocumented-public-package
-    "D205",     # blank-line-after-summary
-    "D212",     # multi-line-summary-first-line
 ]
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
