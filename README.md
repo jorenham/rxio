@@ -4,6 +4,7 @@
 
 [![license](https://img.shields.io/github/license/jorenham/rxio?style=flat-square)](https://github.com/jorenham/rxio/blob/dev/LICENSE?)
 [![CI](https://github.com/jorenham/rxio/actions/workflows/CI.yml/badge.svg)](https://github.com/jorenham/rxio/actions/workflows/CI.yml)
+[![Checked with pyright](https://microsoft.github.io/pyright/img/pyright_badge.svg)](https://microsoft.github.io/pyright/)
 
 -----
 
