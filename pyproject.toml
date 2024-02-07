@@ -17,10 +17,11 @@ python = "^3.12"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
-hypothesis = "^6.97.6"
-pyright = "^1.1.349"
-ruff = "^0.2.0"
+hypothesis = "^6.98.2"
+pyright = "^1.1.350"
+ruff = "^0.2.1"
 codespell = "^2.2.6"
+ipython = "^8.21.0"
 
 
 [tool.pytest.ini_options]
@@ -89,7 +90,6 @@ reportUnnecessaryIsInstance = "warning"
 reportUnnecessaryCast = "warning"
 reportUnnecessaryComparison = "warning"
 reportUnnecessaryContains = "warning"
-reportImplicitStringConcatenation = "warning"
 reportInvalidStubStatement = "error"
 reportIncompleteStub = "error"
 reportUnusedCallResult = "warning"
@@ -169,12 +169,16 @@ extend-ignore = [
     # flake8-annotations
     "ANN001",   # missing-type-function-argument (deprecated)
     "ANN002",   # missing-type-args (deprecated)
+    "ANN401",   # any-type
+    # flake8-bandit
+    "S101",     # assert
+    # tryceratops
+    "TRY003",   # raise-vanilla-args
 ]
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = [
     "D",        # pydocstyle
     "ANN",      # flake8-annotations
-    "S101",     # flake8-bandit: assert
 ]
 
 [tool.ruff.lint.pycodestyle]
