@@ -20,3 +20,6 @@ site/
 .env
 .venv/
 venv/
+
+# VSCode settings
+.vscode/settings.json
