@@ -88,7 +88,8 @@ reportInvalidTypeVarUse = "error"
 reportCallInDefaultInitializer = "warning"
 reportUnnecessaryIsInstance = "warning"
 reportUnnecessaryCast = "warning"
-reportUnnecessaryComparison = "warning"
+# reportUnnecessaryComparison = "warning"
+reportUnnecessaryComparison = "none"
 reportUnnecessaryContains = "warning"
 reportInvalidStubStatement = "error"
 reportIncompleteStub = "error"
@@ -96,7 +97,7 @@ reportUnusedCallResult = "warning"
 reportUnusedExpression = "warning"
 reportUnnecessaryTypeIgnoreComment = "warning"
 reportMatchNotExhaustive = "error"
-reportImplicitOverride = "error"
+# reportImplicitOverride = "error"
 reportShadowedImports = "error"
 
 
@@ -109,6 +110,7 @@ force-exclude = true
 extend-exclude = [
     ".github",
     ".vscode",
+    ".venv",
     "py.typed",
     "experments",
 ]
@@ -172,10 +174,15 @@ extend-ignore = [
     "ANN401",   # any-type
     # flake8-bandit
     "S101",     # assert
+    # pylint
+    "PLW1641",  # eq-without-hash (bug: doesn't consider super)
     # tryceratops
     "TRY003",   # raise-vanilla-args
 ]
 [tool.ruff.lint.per-file-ignores]
+"**/__init__.py" = [
+    "F401",     # pyflakes: unused-import
+]
 "tests/*" = [
     "D",        # pydocstyle
     "ANN",      # flake8-annotations
@@ -198,6 +205,7 @@ ignore-decorators = ["typing.overload"]
 inline-quotes = "single"
 
 [tool.ruff.lint.pylint]
+allow-dunder-method-names = ["__self__"]
 allow-magic-value-types = ["int"]
 
 [tool.ruff.format]
@@ -209,5 +217,5 @@ skip-magic-trailing-comma = true
 
 
 [tool.codespell]
-skip = './dist,./site,*.lock,*.pyc,'
+skip = "./dist,./site,*.lock,*.pyc"
 context = 2
