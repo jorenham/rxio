@@ -112,7 +112,6 @@ extend-exclude = [
     ".vscode",
     ".venv",
     "py.typed",
-    "experments",
 ]
 
 [tool.ruff.lint]
@@ -219,3 +218,6 @@ skip-magic-trailing-comma = true
 [tool.codespell]
 skip = "./dist,./site,*.lock,*.pyc"
 context = 2
+count = true
+# codespell has a case-insensitivity bug: "cange" ignores "CanGe"
+ignore-words-list = "cange,nin"
