@@ -3,7 +3,7 @@ Interfaces for the "nullary" ops (w.r.t. arity of the type parameter).
 
 Note that this might not seem DRY, since many of the protocols are already in
 `typing.Supports`. But the problem with those is, that they are also
-metaclasses, and that I (@jorenham) apparantly am turing into a typing-purist.
+metaclasses, and that I (@jorenham) apparently am turing into a typing-purist.
 """
 import types as _ts
 import typing as _tp

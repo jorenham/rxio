@@ -3,7 +3,7 @@
 import collections.abc as _abc
 import typing as _tp
 
-# arithmatic operations
+# arithmetic operations
 
 @_tp.runtime_checkable
 class CanNeg[Y](_tp.Protocol):

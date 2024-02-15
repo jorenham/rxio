@@ -94,7 +94,7 @@ type HasWeakProxy = HasWeakCallableProxy[..., _tp.Any] | _HasWeakProxy
 
 
 # Unary operators
-# TODO: type-cast metods, e.g. `__int__`
+# TODO: type-cast methods, e.g. `__int__`
 # TODO: strict int methods: `__len__`, `__index__`, `__hash__`
 # TODO: strint str methods: `__repr__`
 
