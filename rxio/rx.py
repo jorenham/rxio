@@ -18,7 +18,7 @@ type _DoesOp2[Xa, Xb, Y] = opt.CanCall[[RX[Xa], RX[Xb] | Xb], RX[Y]]
 
 
 def _binop[Xa, Xb, Y](do_op2: _DoesOp2[Xa, Xb, Y], /) -> _DoesOp2[Xa, Xb, Y]:
-    fname = do_op2.__name__
+    fname = getattr(do_op2, '__name__', '')
     assert fname[:2] == fname[-2:] == '__', fname
 
     @functools.wraps(do_op2)
