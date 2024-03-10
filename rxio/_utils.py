@@ -71,7 +71,6 @@ def has_refs(obj: Any, /, stacklevel: int = 1) -> bool:
     if isinstance(obj, weakref.ReferenceType):
         return obj() is not None
 
-
     if not gc.is_tracked(obj):
         raise ReferenceError(f'{obj!r} is untracked')
 
