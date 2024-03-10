@@ -169,12 +169,19 @@ extend-ignore = [
     # flake8-annotations
     "ANN001",   # missing-type-function-argument (deprecated)
     "ANN002",   # missing-type-args (deprecated)
+    "ANN401",   # any-type (cmon, sometimes `Any` is the only option...)
+
+    # flake8-bandit
+    "S101",     # assert_used (ever heard of the `-O` CLI flag?)
 
     # flake8-pyi
-    "PYI034",   # no-self-return-type  (bad rule: consider e.g. `int.__iadd__`)
+    "PYI034",   # no-self-return-type (nothing wrong with `int.__iadd__`)
 
     # pylint
-    "PLW1641",  # eq-without-hash
+    "PLW1641",  # eq-without-hash (yea sure, ban `dict` and `set`)
+
+    # tryceratops
+    "TRY003",   # raise-vanilla-args (what's wrong with error messages?)
 ]
 
 [tool.ruff.lint.per-file-ignores]
