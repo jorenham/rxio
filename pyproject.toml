@@ -170,6 +170,9 @@ extend-ignore = [
     "ANN001",   # missing-type-function-argument (deprecated)
     "ANN002",   # missing-type-args (deprecated)
 
+    # flake8-pyi
+    "PYI034",   # no-self-return-type  (bad rule: consider e.g. `int.__iadd__`)
+
     # pylint
     "PLW1641",  # eq-without-hash
 ]
