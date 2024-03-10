@@ -14,113 +14,109 @@ repository = "https://github.com/jorenham/rxio"
 
 [tool.poetry.dependencies]
 python = "^3.12"
+optype = "^0.2.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.0.0"
-hypothesis = "^6.98.2"
-pyright = "^1.1.350"
-ruff = "^0.2.1"
+pytest = "^8.1.1"
+hypothesis = "^6.99.0"
+pyright = "^1.1.353"
+ruff = "^0.3.2"
 codespell = "^2.2.6"
-ipython = "^8.21.0"
+ipython = "^8.22.2"
+
+
+[tool.codespell]
+context = 2
+skip = """\
+    ./.venv,\
+    ./.vscode,\
+    *.lock,\
+    *.pyc\
+"""
+
+
+[tool.pyright]
+include = ["rxio", "tests"]
+exclude = [
+    "**/__pycache__",
+    "**/.vscode",
+    ".venv",
+    ".git",
+    ".github",
+    ".pytest_cache",
+    ".ruff_cache",
+    "dist",
+]
+stubPath = "."
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.12"
+pythonPlatform = "All"
+typeCheckingMode = "strict"
+useLibraryCodeForTypes = false
+
+strictListInference = true
+strictDictionaryInference = true
+strictSetInference = true
+deprecateTypingAliases = true
+disableBytesTypePromotions = true
+reportPropertyTypeMismatch = "error"
+reportMissingTypeStubs = "error"
+reportImportCycles = "error"
+reportUnusedImport = "none"  # already covered by ruff
+reportUnusedClass = "warning"
+reportUnusedFunction = "warning"
+reportUnusedVariable = "warning"
+reportConstantRedefinition = "error"
+reportInconsistentConstructor = "error"
+reportMissingTypeArgument = "error"
+reportUninitializedInstanceVariable = "error"
+reportCallInDefaultInitializer = "error"
+reportUnnecessaryIsInstance = "warning"
+reportUnnecessaryCast = "warning"
+reportUnnecessaryComparison = "warning"
+reportUnnecessaryContains = "warning"
+reportImplicitStringConcatenation = "none"
+reportInvalidStubStatement = "error"
+reportIncompleteStub = "error"
+# reportUnusedCallResult = "warning"
+reportUnusedCoroutine = "error"
+reportUnusedExpression = "warning"
+reportUnnecessaryTypeIgnoreComment = "error"
+reportMatchNotExhaustive = "error"
+reportImplicitOverride = "warning"
+reportShadowedImports = "error"
 
 
 [tool.pytest.ini_options]
-minversion = "7.0"
-addopts = [
-    "-ra",
-    "--exitfirst",
-    "--strict-markers",
-    "--strict-config",
-    "--doctest-modules",
-]
+minversion = "8.0"
+testpaths = ["rxio", "tests"]
+addopts = ["-ra", "--doctest-modules"]
 doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
     "IGNORE_EXCEPTION_DETAIL",
     "ELLIPSIS",
 ]
-xfail_strict = true
 filterwarnings = ["error"]
-log_cli_level = "info"
-testpaths = ["rxio", "tests"]
-
-
-[tool.pyright]
-pythonVersion = "3.12"
-pythonPlatform = "All"
-typeCheckingMode = "strict"
-venv = ".venv"
-include = ["rxio"]
-exclude = [
-    "**/__pycache__",
-    "**/.pytest_cache",
-    "**/.hypothesis",
-    "**/.ruff_cache",
-    ".vscode",
-    ".git",
-    ".github",
-    "tests"
-]
-strictListInference = true
-strictDictionaryInference = true
-strictSetInference = true
-disableBytesTypePromotions = true
-reportPropertyTypeMismatch = "error"
-reportMissingTypeStubs = "warning"
-reportImportCycles = "warning"
-reportUnusedImport = "warning"
-reportUnusedClass = "warning"
-reportUnusedFunction = "warning"
-reportUnusedVariable = "warning"
-reportDuplicateImport = "warning"
-reportUntypedNamedTuple = "error"
-reportPrivateUsage = "error"
-reportTypeCommentUsage = "error"
-reportConstantRedefinition = "error"
-reportDeprecated = "information"
-reportInconsistentConstructor = "error"
-reportUninitializedInstanceVariable = "error"
-reportUnknownParameterType = "warning"
-reportUnknownArgumentType = "warning"
-reportUnknownLambdaType = "warning"
-reportUnknownVariableType = "warning"
-reportUnknownMemberType = "warning"
-reportInvalidTypeVarUse = "error"
-reportCallInDefaultInitializer = "warning"
-reportUnnecessaryIsInstance = "warning"
-reportUnnecessaryCast = "warning"
-# reportUnnecessaryComparison = "warning"
-reportUnnecessaryComparison = "none"
-reportUnnecessaryContains = "warning"
-reportInvalidStubStatement = "error"
-reportIncompleteStub = "error"
-reportUnusedCallResult = "warning"
-reportUnusedExpression = "warning"
-reportUnnecessaryTypeIgnoreComment = "warning"
-reportMatchNotExhaustive = "error"
-# reportImplicitOverride = "error"
-reportShadowedImports = "error"
+xfail_strict = true
 
 
 [tool.ruff]
-src = ["rxio"]
+src = ["rxio", "tests"]
 target-version = "py312"
 line-length = 79
 indent-width = 4
+show-fixes = true
 force-exclude = true
-extend-exclude = [
-    ".github",
-    ".vscode",
-    ".venv",
-    "py.typed",
-]
+extend-exclude = [".github", ".vscode"]
 
 [tool.ruff.lint]
 ignore-init-module-imports = true
 preview = true
 select = [
     "F",        # pyflakes
-    "E",        # pycodestyle error
-    "W",        # pycodestyle warning
+    "E",        # pycodestyle-error
+    "W",        # pycodestyle-warning
     "C90",      # mccabe
     "I",        # isort
     "N",        # pep8-naming
@@ -128,6 +124,7 @@ select = [
     "YTT",      # flake8-2020
     "ANN",      # flake8-annotations
     "ASYNC",    # flake8-async
+    "TRIO",     # flake8-trio
     "S",        # flake8-bandit
     "BLE",      # flake8-blind-except
     "B",        # flake8-bugbear
@@ -140,6 +137,7 @@ select = [
     "FA",       # flake8-future-annotations
     "ISC",      # flake8-implicit-str-concat
     "ICN",      # flake8-import-conventions
+    "LOG",      # flake8-logging
     "G",        # flake8-logging-format
     "INP",      # flake8-no-pep420
     "PIE",      # flake8-pie
@@ -157,67 +155,49 @@ select = [
     "ARG",      # flake8-unused-arguments
     "PTH",      # flake8-use-pathlib
     "ERA",      # eradicate
+    "PD",       # pandas-vet
     "PGH",      # pygrep-hooks
     "PL",       # pylint
     "TRY",      # tryceratops
     "FLY",      # flynt
-    "PERF",     # perflint,
+    "NPY",      # numpy
+    "PERF",     # perflint
     "FURB",     # refurb
-    "LOG",      # flake8-logging
     "RUF",      # ruff
 ]
 extend-ignore = [
     # flake8-annotations
     "ANN001",   # missing-type-function-argument (deprecated)
     "ANN002",   # missing-type-args (deprecated)
-    "ANN401",   # any-type
-    # flake8-bandit
-    "S101",     # assert
+
     # pylint
-    "PLW1641",  # eq-without-hash (bug: doesn't consider super)
-    # tryceratops
-    "TRY003",   # raise-vanilla-args
-]
-[tool.ruff.lint.per-file-ignores]
-"**/__init__.py" = [
-    "F401",     # pyflakes: unused-import
-]
-"tests/*" = [
-    "D",        # pydocstyle
-    "ANN",      # flake8-annotations
+    "PLW1641",  # eq-without-hash
 ]
 
-[tool.ruff.lint.pycodestyle]
-max-line-length = 79
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    # flake8-annotations
+    "ANN201",   # missing-return-type-undocumented-public-function
+]
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+
+[tool.ruff.lint.flake8-type-checking]
+strict = true
 
 [tool.ruff.lint.isort]
 case-sensitive = true
 combine-as-imports = true
 force-wrap-aliases = true
 known-first-party = ["rxio"]
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
-ignore-decorators = ["typing.overload"]
-
-[tool.ruff.lint.flake8-quotes]
-inline-quotes = "single"
-
-[tool.ruff.lint.pylint]
-allow-dunder-method-names = ["__self__"]
-allow-magic-value-types = ["int"]
+lines-between-types = 0
+lines-after-imports = 2
 
 [tool.ruff.format]
-docstring-code-format = true
-quote-style = "single"
-indent-style = "space"
+# keep in sync with .editorconfig
 line-ending = "lf"
+indent-style = "space"
+quote-style = "single"
+docstring-code-format = true
 skip-magic-trailing-comma = true
-
-
-[tool.codespell]
-skip = "./dist,./site,*.lock,*.pyc"
-context = 2
-count = true
-# codespell has a case-insensitivity bug: "cange" ignores "CanGe"
-ignore-words-list = "cange,nin"
