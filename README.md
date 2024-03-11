@@ -66,7 +66,7 @@ Especially the availability of PEP 965 will accelerate the prototyping process.
 Once I'm satisfied with the prototype, I plan to add support for earlier
 Python versions.
 
-## Sneak Peak
+## Sneak Peek
 
 ```pycon
 >>> from rxio import rx
