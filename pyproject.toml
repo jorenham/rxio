@@ -154,7 +154,6 @@ select = [
     "TCH",      # flake8-type-checking
     "ARG",      # flake8-unused-arguments
     "PTH",      # flake8-use-pathlib
-    "ERA",      # eradicate
     "PD",       # pandas-vet
     "PGH",      # pygrep-hooks
     "PL",       # pylint
@@ -175,10 +174,10 @@ extend-ignore = [
     "S101",     # assert_used (ever heard of the `-O` CLI flag?)
 
     # flake8-pyi
-    "PYI034",   # no-self-return-type (nothing wrong with `int.__iadd__`)
+    "PYI034",   # no-self-return-type (`int.__iadd__` did nothing wrong!)
 
     # pylint
-    "PLW1641",  # eq-without-hash (yea sure, ban `dict` and `set`)
+    "PLW1641",  # eq-without-hash (stop bullying `dict` and `set`!)
 
     # tryceratops
     "TRY003",   # raise-vanilla-args (what's wrong with error messages?)
@@ -190,14 +189,25 @@ extend-ignore = [
     "ANN201",   # missing-return-type-undocumented-public-function
 ]
 
+[tool.ruff.lint.flake8-type-checking]
+strict = true
+
 [tool.ruff.lint.flake8-annotations]
 allow-star-arg-any = true
 
 [tool.ruff.lint.flake8-quotes]
 inline-quotes = "single"
 
-[tool.ruff.lint.flake8-type-checking]
-strict = true
+[tool.ruff.lint.pylint]
+allow-dunder-method-names = [
+    "__rx_getargs__",
+    "__rx_get__",
+    "__rx_set__",
+    "__rx_adopt__",
+    "__rx_invalidate__",
+    "__rx_delcache__",
+    "__rx_setcache__",
+]
 
 [tool.ruff.lint.isort]
 case-sensitive = true

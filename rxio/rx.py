@@ -1,88 +1,214 @@
 from __future__ import annotations
 
-import functools
-from types import NotImplementedType
-from typing import TYPE_CHECKING, final, override
+import weakref
+from collections import defaultdict
+from typing import TYPE_CHECKING, Any, Protocol, cast, final, override
 
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from types import EllipsisType
+
     import optype as opt
 
 
-def _ensure_rx[X](x: RX[X] | X) -> RX[X]:
-    rx_x: RX[X] = x if isinstance(x, RX) else RX(x)
-    return rx_x
+class CanCallPositional[*Xs, Y](Protocol):
+    def __call__(self, *__args: *Xs) -> Y: ...
 
 
-type _DoesOp2[Xa, Xb, Y] = opt.CanCall[[RX[Xa], RX[Xb] | Xb], RX[Y]]
+class Reactive[Y]:
+    __slots__ = ('__func__', '__rx_children__', '__weakref__')
 
+    __rx_children__: weakref.WeakKeyDictionary[_CanRxCache, set[int]]
 
-def _binop[Xa, Xb, Y](do_op2: _DoesOp2[Xa, Xb, Y], /) -> _DoesOp2[Xa, Xb, Y]:
-    fname = getattr(do_op2, '__name__', '')
-    assert fname[:2] == fname[-2:] == '__', fname
+    def __init__(self) -> None:
+        self.__rx_children__ = weakref.WeakKeyDictionary()
 
-    @functools.wraps(do_op2)
-    def _method(self: RX[Xa], other: RX[Xb] | Xb, /) -> RX[Y]:
-        try:
-            rx_y = do_op2(self, other)
-        except AttributeError as e:
-            if e.name == fname:
-                return NotImplemented
-            raise
+    def __rx_get__(self) -> Y:
+        raise NotImplementedError
 
-        # let potential wrapped `NotImplemented` pass through
-        match rx_y:
-            case RX(NotImplementedType()):
-                return NotImplemented
-            case _:
-                return rx_y
+    @final
+    def __rx_adopt__(self, child: _CanRxCache, /, *edges: int) -> None:
+        """
+        Adopt a child node, that can reach this node via `edges`,
+        which correspond to the child's args indices (this is a multi-graph).
+        """
+        assert edges
 
-    return _method
+        self.__rx_children__.setdefault(child, set()).update(edges)
 
+    @final
+    def __rx_invalidate__(self, value: Y | EllipsisType = ..., /) -> None:
+        """
+        Invalidate or update the children's cache. Invalidation will propagate
+        to all children (depth-first) if necessary.
 
-@final
-class RX[V]:
-    # TODO: let NotImplemented pass through in __new__, instead of @_binop
-    # TODO: have `RX(v: RX[V])` return `v.map(lambda v: v)`, not `RX[RX[V]]`
-    # TODO: return NotImplemented in .map when a.__{}__ raises AttributeError
-    # TODO: lazy evaluation
-    # TODO: in-place `imap` and `iapply` methods for "revisioned mutability"
-    # TODO: augmented `__i{}__` binops using `imap` and `iapply`
-    # TODO: reactivity; notify listeners on mutation
-    # TODO: weakref parents, and "absorb"/"inline" their values when finalized
+        So can we stop reciting Phil Karlton now? Or did he change his name...?
+        """
+        # TODO: prevent overlap with __rx_set__() in self and (grand-)children
+        if value is Ellipsis:
+            for child, edges in self.__rx_children__.items():
+                child.__rx_delcache__(*edges)
+        else:
+            for child, edges in self.__rx_children__.items():
+                child.__rx_setcache__(value, *edges)
 
-    __slots__ = ('__weakref__', '_value')
-    __match_args__ = ('_value',)
-
-    _value: V
-
-    def __init__(self, value: V, /) -> None:
-        self._value = value
+    def __bool__(self) -> bool:
+        return bool(self.__rx_get__())
 
     @override
     def __str__(self) -> str:
-        return f'RX({self._value!r})'
+        return str(self.__rx_get__())
 
-    __repr__ = __str__
+    @override
+    def __repr__(self) -> str:
+        return f'rx({self.__rx_get__()!r})'
 
-    def map[Y](self, f: opt.CanCall[[V], Y], /) -> RX[Y]:
-        return RX(f(self._value))
 
-    def apply[Y](self, rx_f: RX[opt.CanCall[[V], Y]], /) -> RX[Y]:
-        match rx_f:
-            case RX(f) if callable(f):
-                return RX(f(self._value))
-            case _:
-                raise TypeError(type(rx_f))
+class RxValue[Y: opt.CanHash](Reactive[Y]):
+    __slots__ = ('_value', '_watchers')
+    __match_args__ = ('_value',)
 
-    # TODO: dry-er (bin)ops
+    _value: Y
 
-    @_binop
-    def __add__[X, Y](self: RX[opt.CanAdd[X, Y]], x: RX[X] | X, /) -> RX[Y]:
-        # TODO: map directly when x is not RX[X]
-        return _ensure_rx(x).apply(self.map(lambda v: lambda x: v + x))
+    def __init__(self, value: Y, /) -> None:
+        self._value = value
 
-    @_binop
-    def __radd__[X, Y](self: RX[opt.CanRAdd[X, Y]], x: RX[X] | X, /) -> RX[Y]:
-        # TODO: map directly when x is not RX[X]
-        return _ensure_rx(x).apply(self.map(lambda v: lambda x: x + v))
+    @override
+    def __rx_get__(self) -> Y:
+        return self._value
+
+    def __rx_set__(self, value_new: Y, /) -> bool:
+        # TODO: ensure type invariance (a type should never change)
+        # TODO:
+
+        # TODO: currently not threadsafe:
+        #  - build extensible transaction system (with context manager)
+        #  - default implementation: 1 writer, N readers, 1 machine
+
+        # transaction start
+        value = self._value
+        if value == value_new:
+            return False
+
+        self._value = value_new
+        # transaction stop
+
+        # TODO: optionally run in (async) worker/pool
+        self.__rx_invalidate__(value_new)
+
+        return True
+
+
+class _CanRxCache(Protocol):
+    def __rx_delcache__(self, *__keys: int) -> None: ...
+    def __rx_setcache__(self, __value: Any, *__keys: int) -> None: ...
+
+
+class RxResult[*Xs, Y](Reactive[Y]):
+    __slots__ = ('__defaults__', '__func__', '__rx_args__', '__rx_cache__')
+
+    # TODO: support kwargs
+
+    __func__: CanCallPositional[*Xs, Y]
+    __defaults__: Mapping[int, Any]
+
+    __rx_args__: dict[int, Reactive[Any]]
+    __rx_cache__: dict[int | str, Any]
+
+    @override
+    def __init__(
+        self,
+        func: CanCallPositional[*Xs, Y],
+        /,
+        *args: Any,
+    ) -> None:
+        super().__init__()
+        self.__func__ = func
+
+        # distinguish between rx-args (parents) and non-rx args (defaults).
+        self.__defaults__ = defaults = {}
+        self.__rx_args__ = rx_args = {}
+        # build the local multi-graph from the rx-args
+        rx_edges: dict[Reactive[Any], list[int]] = defaultdict(list)
+
+        for i, arg in enumerate(args):
+            if isinstance(arg, Reactive):
+                rx_arg: Reactive[Any] = arg
+                rx_args[i] = rx_arg
+                rx_edges[rx_arg].append(i)
+            else:
+                defaults[i] = arg
+
+        # make the parents adopt this child, so that they'll manage the child's
+        # cache in a push-based manner
+        self.__rx_cache__ = {}
+        for arg, edges in rx_edges.items():
+            arg.__rx_adopt__(self, *edges)
+
+    def _collect_args(self, /) -> tuple[*Xs]:
+        defaults = self.__defaults__
+        rx_args = self.__rx_args__
+        nargs = len(defaults) + len(rx_args)
+
+        rx_cache = self.__rx_cache__
+        args: list[Any] = []
+
+        for i in range(nargs):
+            if i in rx_cache:
+                # maybe check if stale?
+                args.append(rx_cache[i])
+            elif i in defaults:
+                args.append(defaults[i])
+            else:
+                arg = rx_cache[i] = rx_args[i].__rx_get__()
+                args.append(arg)
+
+        return cast(tuple[*Xs], tuple(args))
+
+    @override
+    def __rx_get__(self, /) -> Y:
+        """Maximally lazy evaluation."""
+        # TODO: rare race-condition: parent change, child not invalidated yet?
+        cache = self.__rx_cache__
+        if 'return' in cache:
+            return cache['return']
+
+        args = self._collect_args()
+        res = self.__func__(*args)
+        cache['return'] = res
+
+        self.__rx_invalidate__(res)
+
+        return res
+
+    @final
+    def __rx_delcache__(self, *keys: int) -> None:
+        """
+        Called from a specific RXValue parent arg after it was invalidated.
+        """
+        # TODO: prevent overlap with __rx_get__()
+
+        if not (cache := self.__rx_cache__):
+            return
+
+        invalidated = cache.pop('return', ...) is not Ellipsis
+        for key in keys:
+            cache.pop(key, None)
+
+        if invalidated:
+            self.__rx_invalidate__()
+
+    @final
+    def __rx_setcache__(self, value: Any, *keys: int) -> None:
+        """
+        Called from a specific RXValue parent arg after it changed.
+        """
+        # TODO: prevent overlap with __rx_get__()
+
+        cache = self.__rx_cache__
+        invalidated = cache.pop('return', ...) is not Ellipsis
+        cache |= dict.fromkeys(keys, value)
+
+        if invalidated:
+            self.__rx_invalidate__()
