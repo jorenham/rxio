@@ -1,21 +1,89 @@
-# Reactive I/O
+<h1 align="center">RxIO</h1>
+
+<p align="center">
+    <em>Declarative Reactive programming in modern Python</em>
+</p>
+
+<p align="center">
+    <a href="https://github.com/jorenham/rxio/actions?query=workflow%3ACI">
+        <img
+            alt="Continuous Integration"
+            src="https://github.com/jorenham/rxio/workflows/CI/badge.svg"
+        />
+    </a>
+    <!-- <a href="https://pypi.org/project/rxio/">
+        <img
+            alt="PyPI"
+            src="https://img.shields.io/pypi/v/rxio?style=flat"
+        />
+    </a> -->
+    <!-- <a href="https://github.com/jorenham/rxio">
+        <img
+            alt="Python Versions"
+            src="https://img.shields.io/pypi/pyversions/rxio?style=flat"
+        />
+    </a> -->
+    <a href="https://github.com/jorenham/rxio">
+        <img
+            alt="License"
+            src="https://img.shields.io/github/license/jorenham/rxio?style=flat"
+        />
+    </a>
+    <a href="https://github.com/astral-sh/ruff">
+        <img
+            alt="Ruff"
+            src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json"
+        />
+    </a>
+    <a href="https://github.com/microsoft/pyright">
+        <img
+            alt="Checked with pyright"
+            src="https://microsoft.github.io/pyright/img/pyright_badge.svg"
+        />
+    </a>
+</p>
+
+
+- :zap: Reactive
+- :speech_balloon: Declarative
+- :moneybag: Symbolic
+- :crystal_ball: Predictable
+- :globe_with_meridians: Scalable
+- :electric_plug: Pluggable
+- :beetle: Debuggable
+- :floppy_disk: Lightweight
+- :cat: Fast & Lazy
+- :couple: Sync & Async
+- :shipit: Not a framework
 
 -----
 
-[![license](https://img.shields.io/github/license/jorenham/rxio?style=flat-square)](https://github.com/jorenham/rxio/blob/dev/LICENSE?)
-[![CI](https://github.com/jorenham/rxio/actions/workflows/CI.yml/badge.svg)](https://github.com/jorenham/rxio/actions/workflows/CI.yml)
-[![Checked with pyright](https://microsoft.github.io/pyright/img/pyright_badge.svg)](https://microsoft.github.io/pyright/)
-
------
-
-**RxIO is an experimental project and has no stable interface.**
-
-RxIO v0.2 won't build upon v0.1, and will switch to a BSD-3 license.
+> [!IMPORTANT]
+> RxIO is an experimental project and has no stable interface.
 
 The initial v0.2 prototype will require Python 3.12 or higher.
 Especially the availability of PEP 965 will accelerate the prototyping process.
 Once I'm satisfied with the prototype, I plan to add support for earlier
 Python versions.
+
+## Sneak Peak
+
+```pycon
+>>> from rxio import rx
+>>> a, b = rx(2), rx(7)
+>>> c = a * b
+>>> int(c)
+14
+>>> a *= 3
+>>> int(c)
+42
+```
+
+## FAQ
+
+> "If a tree falls in a forest and no one is around to hear it, does it make a sound?"
+
+No. The tree was dereferenced, so RxIO inlined it into the forest.
 
 ## Optimistic Design Goals
 
