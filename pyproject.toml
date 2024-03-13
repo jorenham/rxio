@@ -108,7 +108,7 @@ line-length = 79
 indent-width = 4
 show-fixes = true
 force-exclude = true
-extend-exclude = [".github", ".vscode"]
+extend-exclude = [".github", ".venv", ".vscode"]
 
 [tool.ruff.lint]
 ignore-init-module-imports = true
@@ -200,13 +200,14 @@ inline-quotes = "single"
 
 [tool.ruff.lint.pylint]
 allow-dunder-method-names = [
-    "__rx_getargs__",
+    "__rx_bases__",
+    "__rx_state__",
+    "__rx_item__",
     "__rx_get__",
     "__rx_set__",
-    "__rx_adopt__",
+    "__rx_update__",
     "__rx_invalidate__",
-    "__rx_delcache__",
-    "__rx_setcache__",
+    "__rx_atomic__",
 ]
 
 [tool.ruff.lint.isort]
