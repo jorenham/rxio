@@ -27,6 +27,10 @@ ipython = "^8.22.2"
 
 [tool.codespell]
 context = 2
+ignore-words-list = """\
+    ot,\
+    cange\
+"""
 skip = """\
     ./.venv,\
     ./.vscode,\
