@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import math
 import operator
 from itertools import chain, starmap
 from typing import (
@@ -19,7 +20,6 @@ from typing import (
 from weakref import WeakValueDictionary
 
 import optype as ot
-from optype import CanFloat, CanInt
 
 from ._state import StateConst, StateVar
 
@@ -69,31 +69,49 @@ class Rx(Generic[Y_co]):  # noqa: PLR0904
         for child, child_index in self.__rx_out__.items():
             child.__rx_invalidate__(child_index)
 
-    @override
-    def __hash__(self) -> int:
-        return hash((type(self), self.__rx_bases__, self.__rx_state__))
-
-    @override
-    def __repr__(self) -> str:
-        return f'rx({self.__rx_state__.item()[1]!r})'
+    # type conversions (non-reactive)
 
     @override
     def __str__(self) -> str:
         return str(self.__rx_get__())
 
-    def __bytes__(self) -> bytes:
-        return bytes(cast(RxVar[ot.CanBytes[Any]], self.__rx_get__()))
+    def __bytes__(self: Rx[ot.CanBytes[Any]]) -> bytes:
+        return bytes(self.__rx_get__())
+
+    def __complex__(self: Rx[ot.CanComplex]) -> complex:
+        return complex(self.__rx_get__())
+
+    def __float__(self: Rx[ot.CanFloat]) -> float:
+        return float(self.__rx_get__())
+
+    def __int__(self: Rx[ot.CanInt]) -> int:
+        return int(self.__rx_get__())
 
     def __bool__(self) -> bool:
         return bool(self.__rx_get__())
 
-    def __int__(self) -> int:
-        return int(cast(RxVar[CanInt], self.__rx_get__()))
+    # representation (non-reactive)
 
-    def __float__(self) -> float:
-        return float(cast(RxVar[CanFloat], self.__rx_get__()))
+    @override
+    def __repr__(self) -> str:
+        # TODO: custom rx_repr() function
+        return f'rx({self.__rx_state__.item()[1]!r})'
 
-    # rich comparison operators
+    # TODO: format(CanFormat[Y: str]) -> RxFormat (`str & RxMap[str]`)
+
+    @override
+    def __hash__(self) -> int:
+        # TODO: custom rx_hash() function
+        return hash((type(self), self.__rx_bases__, self.__rx_state__))
+
+    def __index__(self: Rx[ot.CanIndex]) -> int:
+        return self.__rx_get__().__index__()
+
+    def __len__(self: Rx[ot.CanLen]) -> int:
+        # TODO: custom rx_len() function
+        return len(self.__rx_get__())
+
+    # rich comparison ops
 
     def __lt__[X, Y](self: Rx[ot.CanLt[X, Y]], other: X) -> RxOp2[Y]:
         return RxOp2(10, ' < ', operator.lt, self, other)  # type: ignore[arg]
@@ -115,7 +133,7 @@ class Rx(Generic[Y_co]):  # noqa: PLR0904
     def __ge__[X, Y](self: Rx[ot.CanGe[X, Y]], other: X) -> RxOp2[Y]:
         return RxOp2(10, ' >= ', operator.ge, self, other)  # type: ignore[arg]
 
-    # arithmetic operators
+    # binary arithmetic ops
 
     def __add__[X, Y](self: Rx[ot.CanAdd[X, Y]], x: CanRx[X]) -> RxOp2[Y]:
         return RxOp2(60, ' + ', operator.add, self, x)
@@ -188,7 +206,7 @@ class Rx(Generic[Y_co]):  # noqa: PLR0904
     def __or__[X, Y](self: Rx[ot.CanOr[X, Y]], x: CanRx[X]) -> RxOp2[Y]:
         return RxOp2(20, ' | ', operator.or_, self, x)
 
-    # reflected
+    # reflected arithmetic ops
 
     def __radd__[X, Y](self: Rx[ot.CanRAdd[X, Y]], x: X) -> RxOp2[Y]:
         return RxOp2(60, ' + ', operator.add, x, self)
@@ -228,6 +246,75 @@ class Rx(Generic[Y_co]):  # noqa: PLR0904
 
     def __ror__[X, Y](self: Rx[ot.CanROr[X, Y]], x: X) -> RxOp2[Y]:
         return RxOp2(20, ' | ', operator.or_, x, self)
+
+    # arithmetic operators (unary)
+
+    def __neg__[Y](self: Rx[ot.CanNeg[Y]]) -> RxOp1[Y]:
+        return RxOp1(80, '-', operator.neg, self)
+
+    def __pos__[Y](self: Rx[ot.CanPos[Y]]) -> RxOp1[Y]:
+        return RxOp1(80, '+', operator.pos, self)
+
+    def __invert__[Y](self: Rx[ot.CanInvert[Y]]) -> RxOp1[Y]:
+        return RxOp1(80, '~', operator.invert, self)
+
+    def __abs__[Y](self: Rx[ot.CanAbs[Y]]) -> RxMap[Y]:
+        return RxMap(cast(ot.CanCall[[ot.CanAbs[Y]], Y], abs), self)
+
+    # rounding
+
+    @overload
+    def __round__[Y](self: Rx[ot.CanRound1[Y]], /) -> RxMap[Y]:  ...
+    @overload
+    def __round__[Y](self: Rx[ot.CanRound1[Y]], n: None = ...) -> RxMap[Y]: ...
+    @overload
+    def __round__[N, Y](self: Rx[ot.CanRound2[N, Y]], n: CanRx[N]) -> RxMap[Y]:
+        ...
+
+    def __round__[N, Y1, Y2](
+        self: Rx[ot.CanRound1[Y1] | ot.CanRound2[N, Y2]],
+        n: CanRx[N] | None = None,
+    ) -> RxMap[Y1] | RxMap[Y2]:
+        if n is None:
+            round1 = cast(ot.CanCall[[ot.CanRound1[Y1]], Y1], round)
+            return RxMap(round1, self)
+
+        round2 = cast(ot.CanCall[[ot.CanRound2[N, Y2], N], Y2], round)
+        return RxMap(round2, self, n)
+
+    def __trunc__[Y](self: Rx[ot.CanTrunc[Y]]) -> RxMap[Y]:
+        return RxMap(cast(ot.CanCall[[ot.CanTrunc[Y]], Y], math.trunc), self)
+
+    def __floor__[Y](self: Rx[ot.CanFloor[Y]]) -> RxMap[Y]:
+        return RxMap(cast(ot.CanCall[[ot.CanFloor[Y]], Y], math.floor), self)
+
+    def __ceil__[Y](self: Rx[ot.CanCeil[Y]]) -> RxMap[Y]:
+        return RxMap(cast(ot.CanCall[[ot.CanCeil[Y]], Y], math.ceil), self)
+
+    # callable emulation
+
+    def __call__[**Xs, Y](
+        self: Rx[ot.CanCall[Xs, Y]],
+        *args: CanRx[Any],
+        **kwargs: CanRx[Any],
+    ) -> RxMap[Y]:
+        """
+        Returns the result, given reactive or constants args and kwargs.
+        The function itself is also reactive, so setting this function to
+        another (with the same signature) will invalidate the returned
+        reactive result cache, too.
+        """
+        # TODO: map directly if constant
+        def apply(
+            func: ot.CanCall[Xs, Y],
+            /,
+            *args: Xs.args,
+            **kwargs: Xs.kwargs,
+        ) -> Y:
+            return func(*args, **kwargs)
+
+        # TODO: have RxMap also listen to rx callables
+        return RxMap(apply, self, *args, **kwargs)
 
 
 class RxVar[Y](Rx[Y]):
@@ -275,6 +362,8 @@ class RxVar[Y](Rx[Y]):
             self.__rx_set__(value_new)
 
         return self
+
+    # augmented arithmetic ops
 
     def __iadd__[X](self: RxVar[ot.CanIAdd[X, Y]], x: X) -> RxVar[Y]:
         return self.__rx_update__(operator.__iadd__, x)
@@ -360,15 +449,13 @@ class RxMap[Y](RxVar[Y]):
             parent.__rx_out__[self] = i
 
     def _get_args(self, /) -> list[Any]:
+        # TODO: exception groups + exception notes
         args: list[Any] = []
         for i, base_state in enumerate(self.__rx_bases__):
             value = base_state.get()
             if value is Ellipsis:
                 value = self._rx_parents[i].__rx_get__()
-
-                # TODO: this is probably redundant; remove if assertion passes
-                _, changed = base_state.set(value)
-                assert not changed
+                assert not base_state.set(value)[1]
 
             args.append(value)
 
@@ -390,7 +477,12 @@ class RxMap[Y](RxVar[Y]):
             assert not any(b.get() is Ellipsis for b in self.__rx_bases__)
             return cast(Y, res)
 
-        res = self.__func__(*self._get_args())
+        args = self._get_args()
+        try:
+            res = self.__func__(*args)
+        except Exception as e:
+            e.add_note(repr(self))
+            raise
 
         super().__rx_set__(res)
 
@@ -401,12 +493,63 @@ class RxMap[Y](RxVar[Y]):
         raise RuntimeError('RxResult is immutable')
 
 
-@final
-class RxOp2[Y](RxMap[Y]):
-    """For binary infix operator application."""
-    __slots__ = ('_precedence', '_symbol')
-
+class RxOp[Y](RxMap[Y]):
+    __slots__ = ('_precedence',)
     _precedence: Final[int]
+
+    @override
+    def __init__(
+        self,
+        precedence: int,
+        func: ot.CanCall[..., Y],
+        /,
+        *rx_args: Rx[Any] | Any,
+    ) -> None:
+        self._precedence = precedence
+        super().__init__(func, *rx_args)
+
+    @property
+    def precedence(self) -> int:
+        return self._precedence
+
+    def _format_params(self) -> Generator[str, None, None]:
+        for x in self._get_params():
+            if isinstance(x, RxOp) and self._precedence > x.precedence:
+                yield f'({x!r})'
+            else:
+                yield repr(x)
+
+
+@final
+class RxOp1[Y](RxOp[Y]):
+    """Unary prefix operators."""
+
+    __slots__ = ('_symbol',)
+    _symbol: Final[str]
+
+    @override
+    def __init__[X](
+        self,
+        precedence: int,
+        symbol: str,
+        func: ot.CanCall[[X], Y],
+        x: CanRx[X],
+        /,
+    ) -> None:
+        self._symbol = symbol
+        super().__init__(precedence, func, x)
+
+    @override
+    def __repr__(self) -> str:
+        s, = self._format_params()
+        return f'{self._symbol}{s}'
+
+
+@final
+class RxOp2[Y](RxOp[Y]):
+    """Binary infix operators."""
+
+    __slots__ = ('_symbol',)
     _symbol: Final[str]
 
     @override
@@ -419,26 +562,12 @@ class RxOp2[Y](RxMap[Y]):
         x1: CanRx[X1],
         /,
     ) -> None:
-        assert precedence >= 0
-        self._precedence = precedence
-
         self._symbol = symbol
-
-        super().__init__(func, x0, x1)
-
-    @property
-    def precedence(self) -> int:
-        return self._precedence
+        super().__init__(precedence, func, x0, x1)
 
     @override
     def __repr__(self) -> str:
-        # return self._fmt_template.format(*map(repr, self._get_params()))
-        x0, x1 = self._get_params()
-        s0, s1 = repr(x0), repr(x1)
-        if isinstance(x0, RxOp2) and self._precedence > x0.precedence:
-            s0 = f'({s0})'
-        if isinstance(x1, RxOp2) and self._precedence > x1.precedence:
-            s1 = f'({s1})'
+        s0, s1 = self._format_params()
         return f'{s0}{self._symbol}{s1}'
 
 
@@ -447,10 +576,6 @@ def rx[Y: object](obj: Y) -> RxVar[Y]:
         raise ValueError(f'`{obj}` is ')
     if obj is Ellipsis:
         raise TypeError('`...` is not supported')
-
-    if callable(obj):
-        # TODO:
-        raise TypeError('callables are not supported (yet)')
 
     if isinstance(obj, dict | list | set | bytearray):
         raise TypeError('mutable container types are not supported (yet)')
