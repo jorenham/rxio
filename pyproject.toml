@@ -14,13 +14,13 @@ repository = "https://github.com/jorenham/rxio"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-optype = "^0.2.0"
+optype = "^0.2.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.1.1"
-hypothesis = "^6.99.0"
-pyright = "^1.1.353"
-ruff = "^0.3.2"
+hypothesis = "^6.99.6"
+pyright = "^1.1.354"
+ruff = "^0.3.3"
 codespell = "^2.2.6"
 ipython = "^8.22.2"
 
