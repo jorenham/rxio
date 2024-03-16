@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import math
-import operator
+from collections.abc import Callable
 from itertools import chain, starmap
 from typing import (
     TYPE_CHECKING,
@@ -105,7 +105,7 @@ class Rx(Generic[Y_co]):  # noqa: PLR0904
         return hash((type(self), self.__rx_bases__, self.__rx_state__))
 
     def __index__(self: Rx[ot.CanIndex]) -> int:
-        return self.__rx_get__().__index__()
+        return ot.do_index(self.__rx_get__())
 
     def __len__(self: Rx[ot.CanLen]) -> int:
         # TODO: custom rx_len() function
@@ -114,56 +114,56 @@ class Rx(Generic[Y_co]):  # noqa: PLR0904
     # rich comparison ops
 
     def __lt__[X, Y](self: Rx[ot.CanLt[X, Y]], other: X) -> RxOp2[Y]:
-        return RxOp2(10, ' < ', operator.lt, self, other)  # type: ignore[arg]
+        return RxOp2(10, ' < ', ot.do_lt, self, other)
 
-    def __le__[X, Y](self: Rx[ot.CanLt[X, Y]], other: X) -> RxOp2[Y]:
-        return RxOp2(10, ' <= ', operator.le, self, other)  # type: ignore[arg]
+    def __le__[X, Y](self: Rx[ot.CanLe[X, Y]], other: X) -> RxOp2[Y]:
+        return RxOp2(10, ' <= ', ot.do_le, self, other)
 
     @override
     def __eq__[X, Y](self: Rx[ot.CanEq[X, Y]], other: X) -> RxOp2[Y]:  # type: ignore[override]
-        return RxOp2(10, ' == ', operator.eq, self, other)
+        return RxOp2(10, ' == ', ot.do_eq, self, other)
 
     @override
     def __ne__[X, Y](self: Rx[ot.CanNe[X, Y]], other: X) -> RxOp2[Y]:  # type: ignore[override]
-        return RxOp2(10, ' != ', operator.ne, self, other)
+        return RxOp2(10, ' != ', ot.do_ne, self, other)
 
     def __gt__[X, Y](self: Rx[ot.CanGt[X, Y]], other: X) -> RxOp2[Y]:
-        return RxOp2(10, ' > ', operator.gt, self, other)  # type: ignore[arg]
+        return RxOp2(10, ' > ', ot.do_gt, self, other)
 
     def __ge__[X, Y](self: Rx[ot.CanGe[X, Y]], other: X) -> RxOp2[Y]:
-        return RxOp2(10, ' >= ', operator.ge, self, other)  # type: ignore[arg]
+        return RxOp2(10, ' >= ', ot.do_ge, self, other)
 
     # binary arithmetic ops
 
     def __add__[X, Y](self: Rx[ot.CanAdd[X, Y]], x: CanRx[X]) -> RxOp2[Y]:
-        return RxOp2(60, ' + ', operator.add, self, x)
+        return RxOp2(60, ' + ', ot.do_add, self, x)
 
     def __sub__[X, Y](self: Rx[ot.CanSub[X, Y]], x: CanRx[X]) -> RxOp2[Y]:
-        return RxOp2(60, ' - ', operator.sub, self, x)
+        return RxOp2(60, ' - ', ot.do_sub, self, x)
 
     def __mul__[X, Y](self: Rx[ot.CanMul[X, Y]], x: CanRx[X]) -> RxOp2[Y]:
-        return RxOp2(70, ' * ', operator.mul, self, x)
+        return RxOp2(70, ' * ', ot.do_mul, self, x)
 
     def __matmul__[X, Y](
         self: Rx[ot.CanMatmul[X, Y]],
         x: CanRx[X],
     ) -> RxOp2[Y]:
-        return RxOp2(70, ' @ ', operator.matmul, self, x)
+        return RxOp2(70, ' @ ', ot.do_matmul, self, x)
 
     def __truediv__[X, Y](
         self: Rx[ot.CanTruediv[X, Y]],
         x: CanRx[X],
     ) -> RxOp2[Y]:
-        return RxOp2(70, ' / ', operator.truediv, self, x)
+        return RxOp2(70, ' / ', ot.do_truediv, self, x)
 
     def __floordiv__[X, Y](
         self: Rx[ot.CanFloordiv[X, Y]],
         x: CanRx[X],
     ) -> RxOp2[Y]:
-        return RxOp2(70, ' // ', operator.floordiv, self, x)
+        return RxOp2(70, ' // ', ot.do_floordiv, self, x)
 
     def __mod__[X, Y](self: Rx[ot.CanMod[X, Y]], x: CanRx[X]) -> RxOp2[Y]:
-        return RxOp2(70, ' % ', operator.mod, self, x)
+        return RxOp2(70, ' % ', ot.do_mod, self, x)
 
     @overload
     def __pow__(self, x: CanRx[ot.CanRPow[Y_co, Y_co]]) -> RxOp2[Y_co]: ...
@@ -189,77 +189,77 @@ class Rx(Generic[Y_co]):  # noqa: PLR0904
         self: Rx[ot.CanLshift[X, Y]],
         x: CanRx[X],
     ) -> RxOp2[Y]:
-        return RxOp2(50, ' << ', operator.lshift, self, x)
+        return RxOp2(50, ' << ', ot.do_lshift, self, x)
 
     def __rshift__[X, Y](
         self: Rx[ot.CanRshift[X, Y]],
         x: CanRx[X],
     ) -> RxOp2[Y]:
-        return RxOp2(50, ' >> ', operator.rshift, self, x)
+        return RxOp2(50, ' >> ', ot.do_rshift, self, x)
 
     def __and__[X, Y](self: Rx[ot.CanAnd[X, Y]], x: CanRx[X]) -> RxOp2[Y]:
-        return RxOp2(40, ' & ', operator.and_, self, x)
+        return RxOp2(40, ' & ', ot.do_and, self, x)
 
     def __xor__[X, Y](self: Rx[ot.CanXor[X, Y]], x: CanRx[X]) -> RxOp2[Y]:
-        return RxOp2(30, ' ^ ', operator.xor, self, x)
+        return RxOp2(30, ' ^ ', ot.do_xor, self, x)
 
     def __or__[X, Y](self: Rx[ot.CanOr[X, Y]], x: CanRx[X]) -> RxOp2[Y]:
-        return RxOp2(20, ' | ', operator.or_, self, x)
+        return RxOp2(20, ' | ', ot.do_or, self, x)
 
     # reflected arithmetic ops
 
     def __radd__[X, Y](self: Rx[ot.CanRAdd[X, Y]], x: X) -> RxOp2[Y]:
-        return RxOp2(60, ' + ', operator.add, x, self)
+        return RxOp2(60, ' + ', ot.do_radd, self, x)
 
     def __rsub__[X, Y](self: Rx[ot.CanRSub[X, Y]], x: X) -> RxOp2[Y]:
-        return RxOp2(60, ' - ', operator.sub, x, self)
+        return RxOp2(60, ' - ', ot.do_rsub, self, x)
 
     def __rmul__[X, Y](self: Rx[ot.CanRMul[X, Y]], x: X) -> RxOp2[Y]:
-        return RxOp2(70, ' * ', operator.mul, x, self)
+        return RxOp2(70, ' * ', ot.do_rmul, self, x)
 
     def __rmatmul__[X, Y](self: Rx[ot.CanRMatmul[X, Y]], x: X) -> RxOp2[Y]:
-        return RxOp2(70, ' @ ', operator.matmul, x, self)
+        return RxOp2(70, ' @ ', ot.do_rmatmul, self, x)
 
     def __rtruediv__[X, Y](self: Rx[ot.CanRTruediv[X, Y]], x: X) -> RxOp2[Y]:
-        return RxOp2(70, ' / ', operator.truediv, x, self)
+        return RxOp2(70, ' / ', ot.do_rtruediv, self, x)
 
-    def __rfloordiv__[X, Y](self: Rx[ot.CanRTruediv[X, Y]], x: X) -> RxOp2[Y]:
-        return RxOp2(70, ' // ', operator.floordiv, x, self)
+    def __rfloordiv__[X, Y](self: Rx[ot.CanRFloordiv[X, Y]], x: X) -> RxOp2[Y]:
+        return RxOp2(70, ' // ', ot.do_rfloordiv, self, x)
 
     def __rmod__[X, Y](self: Rx[ot.CanRMod[X, Y]], x: X) -> RxOp2[Y]:
-        return RxOp2(70, ' % ', operator.mod, x, self)
+        return RxOp2(70, ' % ', ot.do_rmod, self, x)
 
     def __rpow__[X, Y](self: Rx[ot.CanRPow[X, Y]], x: X, /) -> RxOp2[Y]:
-        return RxOp2(90, '**', operator.pow, x, self)
+        return RxOp2(90, '**', ot.do_rpow, self, x)
 
     def __rlshift__[X, Y](self: Rx[ot.CanRLshift[X, Y]], x: X, /) -> RxOp2[Y]:
-        return RxOp2(50, ' << ', operator.lshift, x, self)
+        return RxOp2(50, ' << ', ot.do_rlshift, self, x)
 
     def __rrshift__[X, Y](self: Rx[ot.CanRRshift[X, Y]], x: X, /) -> RxOp2[Y]:
-        return RxOp2(50, ' >> ', operator.rshift, x, self)
+        return RxOp2(50, ' >> ', ot.do_rrshift, self, x)
 
     def __rand__[X, Y](self: Rx[ot.CanRAnd[X, Y]], x: X) -> RxOp2[Y]:
-        return RxOp2(40, ' & ', operator.and_, x, self)
+        return RxOp2(40, ' & ', ot.do_rand, self, x)
 
     def __rxor__[X, Y](self: Rx[ot.CanRXor[X, Y]], x: X) -> RxOp2[Y]:
-        return RxOp2(30, ' ^ ', operator.xor, x, self)
+        return RxOp2(30, ' ^ ', ot.do_rxor, self, x)
 
     def __ror__[X, Y](self: Rx[ot.CanROr[X, Y]], x: X) -> RxOp2[Y]:
-        return RxOp2(20, ' | ', operator.or_, x, self)
+        return RxOp2(20, ' | ', ot.do_ror, self, x)
 
     # arithmetic operators (unary)
 
     def __neg__[Y](self: Rx[ot.CanNeg[Y]]) -> RxOp1[Y]:
-        return RxOp1(80, '-', operator.neg, self)
+        return RxOp1(80, '-', ot.do_neg, self)
 
     def __pos__[Y](self: Rx[ot.CanPos[Y]]) -> RxOp1[Y]:
-        return RxOp1(80, '+', operator.pos, self)
+        return RxOp1(80, '+', ot.do_pos, self)
 
     def __invert__[Y](self: Rx[ot.CanInvert[Y]]) -> RxOp1[Y]:
-        return RxOp1(80, '~', operator.invert, self)
+        return RxOp1(80, '~', ot.do_invert, self)
 
     def __abs__[Y](self: Rx[ot.CanAbs[Y]]) -> RxMap[Y]:
-        return RxMap(cast(ot.CanCall[[ot.CanAbs[Y]], Y], abs), self)
+        return RxMap(cast(Callable[[ot.CanAbs[Y]], Y], abs), self)
 
     # rounding
 
@@ -276,25 +276,25 @@ class Rx(Generic[Y_co]):  # noqa: PLR0904
         n: CanRx[N] | None = None,
     ) -> RxMap[Y1] | RxMap[Y2]:
         if n is None:
-            round1 = cast(ot.CanCall[[ot.CanRound1[Y1]], Y1], round)
+            round1 = cast(Callable[[ot.CanRound1[Y1]], Y1], round)
             return RxMap(round1, self)
 
-        round2 = cast(ot.CanCall[[ot.CanRound2[N, Y2], N], Y2], round)
+        round2 = cast(Callable[[ot.CanRound2[N, Y2], N], Y2], round)
         return RxMap(round2, self, n)
 
     def __trunc__[Y](self: Rx[ot.CanTrunc[Y]]) -> RxMap[Y]:
-        return RxMap(cast(ot.CanCall[[ot.CanTrunc[Y]], Y], math.trunc), self)
+        return RxMap(cast(Callable[[ot.CanTrunc[Y]], Y], math.trunc), self)
 
     def __floor__[Y](self: Rx[ot.CanFloor[Y]]) -> RxMap[Y]:
-        return RxMap(cast(ot.CanCall[[ot.CanFloor[Y]], Y], math.floor), self)
+        return RxMap(cast(Callable[[ot.CanFloor[Y]], Y], math.floor), self)
 
     def __ceil__[Y](self: Rx[ot.CanCeil[Y]]) -> RxMap[Y]:
-        return RxMap(cast(ot.CanCall[[ot.CanCeil[Y]], Y], math.ceil), self)
+        return RxMap(cast(Callable[[ot.CanCeil[Y]], Y], math.ceil), self)
 
     # callable emulation
 
     def __call__[**Xs, Y](
-        self: Rx[ot.CanCall[Xs, Y]],
+        self: Rx[Callable[Xs, Y]],
         *args: CanRx[Any],
         **kwargs: CanRx[Any],
     ) -> RxMap[Y]:
@@ -306,7 +306,7 @@ class Rx(Generic[Y_co]):  # noqa: PLR0904
         """
         # TODO: map directly if constant
         def apply(
-            func: ot.CanCall[Xs, Y],
+            func: Callable[Xs, Y],
             /,
             *args: Xs.args,
             **kwargs: Xs.kwargs,
@@ -317,13 +317,13 @@ class Rx(Generic[Y_co]):  # noqa: PLR0904
         return RxMap(apply, self, *args, **kwargs)
 
 
-class RxVar[Y](Rx[Y]):
+class RxVar[X, Y](Rx[Y]):
     @contextlib.contextmanager
     def __rx_atomic__(self, /) -> Generator[None, None, None]:
         # TODO: implement this (like a re-entry lock) (backend-specific)
         yield
 
-    def __rx_set__(self, value: Y, /) -> bool:
+    def __rx_set__(self, value: X, /) -> bool:
         """
         Sets the value of this variable (if changed), and notify the listeners.
         Returns True if the value changed, False if it didn't.
@@ -331,7 +331,7 @@ class RxVar[Y](Rx[Y]):
         assert value is not Ellipsis
 
         with self.__rx_atomic__():
-            _, changed = self.__rx_state__.set(value)
+            _, changed = self.__rx_state__.set(cast(Y, value))
             if not changed:
                 return False
 
@@ -343,7 +343,7 @@ class RxVar[Y](Rx[Y]):
 
     def __rx_update__[**Xs](
         self,
-        func: ot.CanCall[Concatenate[Y, Xs], Y],
+        func: Callable[Concatenate[Y, Xs], X],
         /,
         *args: Xs.args,
         **kwargs: Xs.kwargs,
@@ -365,56 +365,63 @@ class RxVar[Y](Rx[Y]):
 
     # augmented arithmetic ops
 
-    def __iadd__[X](self: RxVar[ot.CanIAdd[X, Y]], x: X) -> RxVar[Y]:
-        return self.__rx_update__(operator.__iadd__, x)
+    def __iadd__(self: RxVar[X, ot.CanIAdd[X, X]], x: X) -> RxVar[X, Y]:
+        return self.__rx_update__(ot.do_iadd, x)
 
-    def __isub__[X](self: RxVar[ot.CanISub[X, Y]], x: X) -> RxVar[Y]:
-        return self.__rx_update__(operator.__isub__, x)
+    def __isub__(self: RxVar[X, ot.CanISub[X, X]], x: X) -> RxVar[X, Y]:
+        return self.__rx_update__(ot.do_isub, x)
 
-    def __imul__[X](self: RxVar[ot.CanIMul[X, Y]], x: X) -> RxVar[Y]:
-        return self.__rx_update__(operator.__imul__, x)
+    def __imul__(self: RxVar[X, ot.CanIMul[X, X]], x: X) -> RxVar[X, Y]:
+        return self.__rx_update__(ot.do_imul, x)
 
-    def __imatmul__[X](self: RxVar[ot.CanIMatmul[X, Y]], x: X) -> RxVar[Y]:
-        return self.__rx_update__(operator.__imatmul__, x)
+    def __imatmul__(self: RxVar[X, ot.CanIMatmul[X, X]], x: X) -> RxVar[X, Y]:
+        return self.__rx_update__(ot.do_imatmul, x)
 
-    def __itruediv__[X](self: RxVar[ot.CanITruediv[X, Y]], x: X) -> RxVar[Y]:
-        return self.__rx_update__(operator.__itruediv__, x)
+    def __itruediv__(
+        self: RxVar[X, ot.CanITruediv[X, X]],
+        x: X,
+    ) -> RxVar[X, Y]:
+        return self.__rx_update__(ot.do_itruediv, x)
 
-    def __ifloordiv__[X](self: RxVar[ot.CanIFloordiv[X, Y]], x: X) -> RxVar[Y]:
-        return self.__rx_update__(operator.__ifloordiv__, x)
+    def __ifloordiv__(
+        self: RxVar[X, ot.CanIFloordiv[X, X]],
+        x: X,
+    ) -> RxVar[X, Y]:
+        return self.__rx_update__(ot.do_ifloordiv, x)
 
-    def __imod__[X](self: RxVar[ot.CanIMod[X, Y]], x: X) -> RxVar[Y]:
-        return self.__rx_update__(operator.__imod__, x)
+    def __imod__(self: RxVar[X, ot.CanIMod[X, X]], x: X) -> RxVar[X, Y]:
+        # TODO: fix optype bug
+        return self.__rx_update__(ot.do_imod, x)
 
-    def __ipow__[X](self: RxVar[ot.CanIPow[X, Y]], x: X) -> RxVar[Y]:
-        return self.__rx_update__(operator.__ipow__, x)
+    def __ipow__(self: RxVar[X, ot.CanIPow[X, X]], x: X) -> RxVar[X, Y]:
+        return self.__rx_update__(ot.do_ipow, x)
 
-    def __ilshift__[X](self: RxVar[ot.CanILshift[X, Y]], x: X) -> RxVar[Y]:
-        return self.__rx_update__(operator.__ilshift__, x)
+    def __ilshift__(self: RxVar[X, ot.CanILshift[X, X]], x: X) -> RxVar[X, Y]:
+        return self.__rx_update__(ot.do_ilshift, x)
 
-    def __irshift__[X](self: RxVar[ot.CanIRshift[X, Y]], x: X) -> RxVar[Y]:
-        return self.__rx_update__(operator.__irshift__, x)
+    def __irshift__(self: RxVar[X, ot.CanIRshift[X, X]], x: X) -> RxVar[X, Y]:
+        return self.__rx_update__(ot.do_irshift, x)
 
-    def __iand__[X](self: RxVar[ot.CanIAnd[X, Y]], x: X) -> RxVar[Y]:
-        return self.__rx_update__(operator.__iand__, x)
+    def __iand__(self: RxVar[X, ot.CanIAnd[X, X]], x: X) -> RxVar[X, Y]:
+        return self.__rx_update__(ot.do_iand, x)
 
-    def __ixor__[X](self: RxVar[ot.CanIXor[X, Y]], x: X) -> RxVar[Y]:
-        return self.__rx_update__(operator.__ixor__, x)
+    def __ixor__(self: RxVar[X, ot.CanIXor[X, X]], x: X) -> RxVar[X, Y]:
+        return self.__rx_update__(ot.do_ixor, x)
 
-    def __ior__[X](self: RxVar[ot.CanIOr[X, Y]], x: X) -> RxVar[Y]:
-        return self.__rx_update__(operator.__ior__, x)
+    def __ior__(self: RxVar[X, ot.CanIOr[X, X]], x: X) -> RxVar[X, Y]:
+        return self.__rx_update__(ot.do_ior, x)
 
 
-class RxMap[Y](RxVar[Y]):
+class RxMap[Y](RxVar[Y, Y]):
     __slots__ = ('__func__', '_rx_parents')
 
-    __func__: ot.CanCall[..., Y]
+    __func__: Callable[..., Y]
     _rx_parents: WeakValueDictionary[int, Rx[Any]]
 
     @override
     def __init__(
         self,
-        func: ot.CanCall[..., Y],
+        func: Callable[..., Y],
         /,
         *rx_args: Rx[Any] | Any,
     ) -> None:
@@ -501,7 +508,7 @@ class RxOp[Y](RxMap[Y]):
     def __init__(
         self,
         precedence: int,
-        func: ot.CanCall[..., Y],
+        func: Callable[..., Y],
         /,
         *rx_args: Rx[Any] | Any,
     ) -> None:
@@ -532,7 +539,7 @@ class RxOp1[Y](RxOp[Y]):
         self,
         precedence: int,
         symbol: str,
-        func: ot.CanCall[[X], Y],
+        func: Callable[[X], Y],
         x: CanRx[X],
         /,
     ) -> None:
@@ -557,7 +564,7 @@ class RxOp2[Y](RxOp[Y]):
         self,
         precedence: int,
         symbol: str,
-        func: ot.CanCall[[X0, X1], Y],
+        func: Callable[[X0, X1], Y],
         x0: CanRx[X0],
         x1: CanRx[X1],
         /,
@@ -571,7 +578,7 @@ class RxOp2[Y](RxOp[Y]):
         return f'{s0}{self._symbol}{s1}'
 
 
-def rx[Y: object](obj: Y) -> RxVar[Y]:
+def rx[Y: object](obj: Y) -> RxVar[Y, Y]:
     if obj is None or obj is NotImplemented:
         raise ValueError(f'`{obj}` is ')
     if obj is Ellipsis:
